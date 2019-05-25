@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--monitorInterval - интервал (в секундах) проверки обновления конфигурационного файла-->
+<Configuration status="WARN" strict="true" monitorInterval="30">
+    <Properties>
+        <Property name="FILE_NAME" value="C:\TMP\logs.log"/>
+        <Property name="ROLLING_FILE_NAME" value="C:\TMP\rolling_logs.log"/>
+    </Properties>
+
+    <Appenders>
+        <!--возможные значение аттрибута type - File, Console-->
+        <Appender type="Console" name="STDOUT">
+            <!-- %C{1}.%M.%L - class. method.line number -->
+            <!-- %m - сообщение, переданное в лог-->
+            <!-- %ex - исключение, переданное в лог-->
+            <!-- %n - перевод строки-->
+            <Layout type="PatternLayout" pattern="%C{1}.%M.%L %m %ex%n"/>
+        </Appender>
+
+        <Appender type="File" name="FILE_APPENDER" fileName="${FILE_NAME}">
+            <!-- [%t] - вероятно, имя потока ([main]) -->
+            <!-- %-5level уровень лога (ERROR, INFO, WARN,...),
+                            "5" - размер поля 5 символов
+                            "-" - выравнивание по левому краю-->
+            <!-- %logger{36} - выводит имя класса -->
+            <!-- %msg - тоже самое что %m %n %ex вместе -->
+            <!-- В примере ниже, %C{3} и %logger{36} по сути показывают одно и то же-->
+            <!--<Layout type="PatternLayout" pattern="%d{HH:mm:ss.SSS} %C{3}:%M:%L [%t] %-5level %logger{36} - %msg%n"/>-->
+
+            <!-- Подходящий формат для лога в SharedStatements -->
+            <Layout type="PatternLayout" pattern="%d{HH:mm:ss.SSS} %p [%t] %C{3}:%M:%L - %msg%n"/>
+        </Appender>
+
+        <RollingFile name="ROLLING_FILE" fileName="${ROLLING_FILE_NAME}"
+                     filePattern="logs/$${date:yyyy-MM}/app-%d{yyyy-MM-dd-HH}-%i.log.gz">
+            <PatternLayout>
+                <!-- %c{3.} - имя класса,
+                             {3.} - количество первых букв в имени каждого подпакета-->
+                <!-- %p - уровень лога (ERROR, WARN, INFO, ...)-->
+                <Pattern>%d %p %c{3.} [%t] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="6" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="250 MB"/>
+            </Policies>
+        </RollingFile>
+
+    </Appenders>
+
+    <Loggers>
+        <!--Логгер для пакета com.pb.dao-->
+        <Logger name="com.pb.dao" level="ERROR" additivity="true">
+            <AppenderRef ref="FILE_APPENDER"/>
+        </Logger>
+
+        <!--Логгер для пакета com.pb.service-->
+        <Logger name="com.pb.service" level="ERROR" additivity="true">
+            <AppenderRef ref="ROLLING_FILE"/>
+        </Logger>
+
+        <!--Это, вероятно, основной логгер-->
+        <Root level="INFO">
+            <!--Может использоваться несколько аппендеров-->
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="FILE_APPENDER"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
